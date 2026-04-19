@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+   STUDENT TASK MANAGER - Frontend
+   File: frontend/index.html
+  ============================================================
+
+  AWS S3 DEPLOYMENT NOTE:
+  ───────────────────────
+  This file (along with style.css and script.js) is deployed
+  to an Amazon S3 bucket configured for static website hosting.
+
+  Steps to deploy to S3:
+  1. Go to AWS Console → S3 → Create Bucket
+  2. Name: student-task-manager-frontend
+  3. Uncheck "Block all public access"
+  4. Upload index.html, style.css, script.js
+  5. Go to "Properties" → Enable "Static website hosting"
+  6. Set "Index document" to index.html
+  7. Go to "Permissions" → Add bucket policy for public read:
+     {
+       "Version": "2012-10-17",
+       "Statement": [{
+         "Sid": "PublicRead",
+         "Effect": "Allow",
+         "Principal": "*",
+         "Action": "s3:GetObject",
+         "Resource": "arn:aws:s3:::student-task-manager-frontend/*"
+       }]
+     }
+  8. Access via: http://student-task-manager-frontend.s3-website-<region>.amazonaws.com
+
+  Remember to update the API_URL in script.js to point to your EC2 public IP!
+  ============================================================
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO Meta Tags -->
+  <title>Student Task Manager | Cloud-Powered Productivity</title>
+  <meta name="description" content="A full-stack Student Task Manager to organize your academic tasks, deadlines, and assignments. Built with Node.js, Express, and deployed on AWS." />
+  <meta name="keywords" content="student task manager, task tracker, academic planner, Node.js, AWS, productivity" />
+
+  <!-- Google Fonts: Inter for modern clean typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- External Stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!--  BACKGROUND PARTICLES (visual effect)                  -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="bg-particles" aria-hidden="true">
+    <span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!--  AUTH SECTION: Login & Register                        -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div id="auth-section" class="auth-container">
+
+    <!-- App Brand / Logo -->
+    <div class="brand-logo" aria-label="Student Task Manager branding">
+      <div class="logo-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <path d="M9 11l3 3L22 4"/>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+      </div>
+      <h1 class="brand-name">TaskFlow</h1>
+      <p class="brand-tagline">Student Task Manager</p>
+    </div>
+
+    <!-- Auth Card -->
+    <div class="auth-card" role="main">
+
+      <!-- Tab Toggle: Login / Register -->
+      <div class="auth-tabs" role="tablist" aria-label="Authentication options">
+        <button
+          id="tab-login"
+          class="tab-btn active"
+          role="tab"
+          aria-selected="true"
+          aria-controls="login-panel"
+          onclick="switchTab('login')"
+        >Login</button>
+        <button
+          id="tab-register"
+          class="tab-btn"
+          role="tab"
+          aria-selected="false"
+          aria-controls="register-panel"
+          onclick="switchTab('register')"
+        >Register</button>
+        <div class="tab-indicator" id="tab-indicator"></div>
+      </div>
+
+      <!-- ── LOGIN PANEL ─────────────────────────────────── -->
+      <div id="login-panel" class="auth-panel active" role="tabpanel" aria-labelledby="tab-login">
+        <h2 class="panel-title">Welcome back! 👋</h2>
+        <p class="panel-subtitle">Sign in to manage your tasks</p>
+
+        <form id="login-form" onsubmit="handleLogin(event)" novalidate>
+          <div class="form-group">
+            <label for="login-username" class="form-label">Username</label>
+            <div class="input-wrapper">
+              <span class="input-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </span>
+              <input
+                type="text"
+                id="login-username"
+                name="username"
+                class="form-input"
+                placeholder="Enter your username"
+                autocomplete="username"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="login-password" class="form-label">Password</label>
+            <div class="input-wrapper">
+              <span class="input-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              </span>
+              <input
+                type="password"
+                id="login-password"
+                name="password"
+                class="form-input"
+                placeholder="Enter your password"
+                autocomplete="current-password"
+                required
+              />
+            </div>
+          </div>
+
+          <button type="submit" id="login-btn" class="btn btn-primary btn-full">
+            <span class="btn-text">Sign In</span>
+            <span class="btn-loader" aria-hidden="true"></span>
+          </button>
+        </form>
+
+        <div id="login-message" class="auth-message" role="alert" aria-live="polite"></div>
+      </div>
+
+      <!-- ── REGISTER PANEL ──────────────────────────────── -->
+      <div id="register-panel" class="auth-panel" role="tabpanel" aria-labelledby="tab-register">
+        <h2 class="panel-title">Create account 🎓</h2>
+        <p class="panel-subtitle">Join and start organizing your tasks</p>
+
+        <form id="register-form" onsubmit="handleRegister(event)" novalidate>
+          <div class="form-group">
+            <label for="reg-username" class="form-label">Username</label>
+            <div class="input-wrapper">
+              <span class="input-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </span>
+              <input
+                type="text"
+                id="reg-username"
+                name="username"
+                class="form-input"
+                placeholder="Choose a username"
+                autocomplete="username"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="reg-password" class="form-label">Password</label>
+            <div class="input-wrapper">
+              <span class="input-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              </span>
+              <input
+                type="password"
+                id="reg-password"
+                name="password"
+                class="form-input"
+                placeholder="Create a password"
+                autocomplete="new-password"
+                required
+              />
+            </div>
+          </div>
+
+          <button type="submit" id="register-btn" class="btn btn-primary btn-full">
+            <span class="btn-text">Create Account</span>
+            <span class="btn-loader" aria-hidden="true"></span>
+          </button>
+        </form>
+
+        <div id="register-message" class="auth-message" role="alert" aria-live="polite"></div>
+      </div>
+
+    </div><!-- /.auth-card -->
+
+    <!-- AWS Info Badge -->
+    <div class="aws-badge" aria-label="AWS powered">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M13.527 11.261c1.057-.452 1.76-1.498 1.76-2.698 0-1.648-1.34-2.988-2.988-2.988H8.01v11.85h1.5V12.87h2.79l2.76 4.554h1.77L13.527 11.26zM9.51 11.47V7.075h2.79c.826 0 1.488.665 1.488 1.488 0 .826-.662 1.5-1.488 1.5H9.51v1.407zM12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z"/>
+      </svg>
+      Powered by AWS Cloud
+    </div>
+
+  </div><!-- /#auth-section -->
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!--  DASHBOARD SECTION: Task Management (hidden until login) -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div id="dashboard-section" class="dashboard-container hidden" role="main">
+
+    <!-- ── HEADER NAV ────────────────────────────────────── -->
+    <header class="dashboard-header" role="banner">
+      <div class="header-left">
+        <div class="logo-icon small" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M9 11l3 3L22 4"/>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+        </div>
+        <span class="header-brand">TaskFlow</span>
+      </div>
+
+      <div class="header-center">
+        <div class="welcome-chip">
+          <span id="user-greeting">Welcome, Student!</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Stats display -->
+        <div class="header-stats" aria-label="Task statistics">
+          <div class="stat-chip" id="total-stat" aria-label="Total tasks">
+            <span class="stat-num" id="stat-total">0</span>
+            <span class="stat-label">Total</span>
+          </div>
+          <div class="stat-chip done" id="done-stat" aria-label="Completed tasks">
+            <span class="stat-num" id="stat-done">0</span>
+            <span class="stat-label">Done</span>
+          </div>
+          <div class="stat-chip pending" id="pending-stat" aria-label="Pending tasks">
+            <span class="stat-num" id="stat-pending">0</span>
+            <span class="stat-label">Pending</span>
+          </div>
+        </div>
+        <button id="logout-btn" class="btn btn-logout" onclick="handleLogout()" aria-label="Logout">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16,17 21,12 16,7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Logout
+        </button>
+      </div>
+    </header>
+
+    <!-- ── MAIN CONTENT ──────────────────────────────────── -->
+    <div class="dashboard-content">
+
+      <!-- Add Task Form Card -->
+      <section class="card add-task-card" aria-labelledby="add-task-heading">
+        <div class="card-header">
+          <div class="card-icon add-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </div>
+          <div>
+            <h2 id="add-task-heading" class="card-title">Add New Task</h2>
+            <p class="card-subtitle">Fill in the details to create a task</p>
+          </div>
+        </div>
+
+        <form id="task-form" onsubmit="handleAddTask(event)" novalidate>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="task-title" class="form-label">Task Title <span class="required">*</span></label>
+              <input
+                type="text"
+                id="task-title"
+                name="title"
+                class="form-input"
+                placeholder="e.g., Complete Math Assignment"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="task-deadline" class="form-label">Deadline <span class="required">*</span></label>
+              <input
+                type="date"
+                id="task-deadline"
+                name="deadline"
+                class="form-input"
+                required
+              />
+            </div>
+
+            <div class="form-group span-full">
+              <label for="task-description" class="form-label">Description <span class="optional">(optional)</span></label>
+              <textarea
+                id="task-description"
+                name="description"
+                class="form-input form-textarea"
+                placeholder="Add any notes or details about this task..."
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="form-footer">
+            <button type="submit" id="add-task-btn" class="btn btn-primary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              <span class="btn-text">Add Task</span>
+              <span class="btn-loader" aria-hidden="true"></span>
+            </button>
+            <div id="task-message" class="task-message" role="alert" aria-live="polite"></div>
+          </div>
+        </form>
+      </section>
+
+      <!-- Filter Tabs + Task List Card -->
+      <section class="card task-list-card" aria-labelledby="task-list-heading">
+        <div class="card-header">
+          <div class="card-icon list-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="8" y1="6" x2="21" y2="6"/>
+              <line x1="8" y1="12" x2="21" y2="12"/>
+              <line x1="8" y1="18" x2="21" y2="18"/>
+              <line x1="3" y1="6" x2="3.01" y2="6"/>
+              <line x1="3" y1="12" x2="3.01" y2="12"/>
+              <line x1="3" y1="18" x2="3.01" y2="18"/>
+            </svg>
+          </div>
+          <div>
+            <h2 id="task-list-heading" class="card-title">My Tasks</h2>
+            <p class="card-subtitle">Track and manage your assignments</p>
+          </div>
+
+          <!-- Filter buttons -->
+          <div class="filter-tabs" role="group" aria-label="Filter tasks">
+            <button id="filter-all"     class="filter-btn active" onclick="filterTasks('all')">All</button>
+            <button id="filter-pending" class="filter-btn"        onclick="filterTasks('pending')">Pending</button>
+            <button id="filter-done"    class="filter-btn"        onclick="filterTasks('done')">Completed</button>
+          </div>
+        </div>
+
+        <!-- Loading spinner -->
+        <div id="tasks-loading" class="loading-state" aria-live="polite" aria-label="Loading tasks">
+          <div class="spinner" aria-hidden="true"></div>
+          <p>Loading your tasks...</p>
+        </div>
+
+        <!-- Empty state -->
+        <div id="tasks-empty" class="empty-state hidden" role="status">
+          <div class="empty-icon" aria-hidden="true">
+            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M9 11l3 3L22 4"/>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+          </div>
+          <h3 id="empty-title">No tasks yet!</h3>
+          <p id="empty-subtitle">Add your first task above to get started.</p>
+        </div>
+
+        <!-- Task list container -->
+        <ul id="task-list" class="task-list hidden" role="list" aria-label="Task items"></ul>
+
+      </section>
+
+    </div><!-- /.dashboard-content -->
+
+    <!-- AWS Services Info Bar -->
+    <footer class="aws-info-bar" role="contentinfo">
+      <p class="aws-title">☁️ AWS Cloud Architecture</p>
+      <div class="aws-services">
+        <span class="aws-tag ec2"   title="Backend server deployed on EC2">EC2 Backend</span>
+        <span class="aws-tag s3"    title="Frontend hosted on S3">S3 Frontend</span>
+        <span class="aws-tag rds"   title="Database on RDS (conceptual)">RDS Database</span>
+        <span class="aws-tag iam"   title="Access control via IAM">IAM Roles</span>
+        <span class="aws-tag cw"    title="Performance monitoring with CloudWatch">CloudWatch</span>
+        <span class="aws-tag sns"   title="Deadline alerts with SNS">SNS Alerts</span>
+      </div>
+    </footer>
+
+  </div><!-- /#dashboard-section -->
+
+  <!-- ── NOTIFICATION TOAST ─────────────────────────────── -->
+  <div id="toast" class="toast hidden" role="alert" aria-live="polite" aria-atomic="true">
+    <span id="toast-icon" aria-hidden="true"></span>
+    <span id="toast-message"></span>
+  </div>
+
+  <!-- Frontend JavaScript -->
+  <script src="script.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,35 @@
+{
+  "name": "student-task-manager",
+  "version": "1.0.0",
+  "description": "A full-stack Student Task Manager built with Node.js + Express backend and vanilla HTML/CSS/JS frontend. Demonstrates REST API design, frontend-backend integration, and AWS cloud deployment using EC2, S3, RDS, IAM, CloudWatch, and SNS.",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js"
+  },
+  "keywords": [
+    "student",
+    "task-manager",
+    "nodejs",
+    "express",
+    "rest-api",
+    "fullstack",
+    "aws",
+    "ec2",
+    "s3",
+    "cloud"
+  ],
+  "author": "Student Task Manager Project",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
